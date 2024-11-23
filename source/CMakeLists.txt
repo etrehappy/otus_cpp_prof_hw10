@@ -34,7 +34,7 @@ function(set_common_target_properties target)
     )
 
     target_compile_options(${target} PRIVATE
-        $<$<CXX_COMPILER_ID:MSVC>:/W4> /WX 
+        $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
     )
     set_target_properties(${target} PROPERTIES
