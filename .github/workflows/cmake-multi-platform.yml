@@ -6,22 +6,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  # create_release:
-  #   name: Create release
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-  #   steps:
-  #     - name: Create release
-  #       id: create_release
-  #       uses: actions/create-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         tag_name: ${{ github.run_number }}
-  #         release_name: Release ${{ github.run_number }}
-  #         draft: false
-  #         prerelease: false
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
 
   build:
     #needs: create_release
@@ -98,15 +98,15 @@ jobs:
           fi
         fi
 
-    # - name: Configure CMake (Ubuntu & macOS)
-    #   if: matrix.os != 'windows-latest'
-    #   run: |
-    #     cmake -B ${{ steps.strings.outputs.build-output-dir }} \
-    #           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-    #           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-    #           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-    #           -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake \
-    #           -S ${GITHUB_WORKSPACE}/source
+    - name: Configure CMake (Ubuntu & macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+              -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+              -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake \
+              -S ${GITHUB_WORKSPACE}/source
 
 
     # Windows
@@ -151,93 +151,93 @@ jobs:
           echo "vcpkg is cached"
         }
         
-    # - name: Configure CMake (Windows)
-    #   if: matrix.os == 'windows-latest'
-    #   run: |
-    #     cmake -B ${{ steps.strings.outputs.build-output-dir }} `
-    #           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
-    #           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
-    #           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} `
-    #           -DCMAKE_TOOLCHAIN_FILE=C:\Users\runneradmin\vcpkg\scripts\buildsystems\vcpkg.cmake `
-    #           -S ${{ github.workspace }}\source
+    - name: Configure CMake (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake -B ${{ steps.strings.outputs.build-output-dir }} `
+              -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} `
+              -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} `
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} `
+              -DCMAKE_TOOLCHAIN_FILE=C:\Users\runneradmin\vcpkg\scripts\buildsystems\vcpkg.cmake `
+              -S ${{ github.workspace }}\source
 
     # ###########################   Build   #########################################################    
       
-    # - name: Build
-    #   # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-    #   run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}      
+    - name: Build
+      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}      
 
 
     #   ###########################   Upload Release   #########################################################
-    # - name: Prepare directories and copy files (Windows)
-    #   if: matrix.os == 'windows-latest'
-    #   shell: pwsh
-    #   run: |
-    #     $buildOutputDir = "${{ steps.strings.outputs.build-output-dir }}"
-    #     $releaseDir = Join-Path -Path $buildOutputDir -ChildPath 'release_out'
-    #     $clientDir = Join-Path -Path $releaseDir -ChildPath 'client'
-    #     $libraryDir = Join-Path -Path $releaseDir -ChildPath 'library'
+    - name: Prepare directories and copy files (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        $buildOutputDir = "${{ steps.strings.outputs.build-output-dir }}\server"
+        $releaseDir = Join-Path -Path $buildOutputDir -ChildPath 'release_out'
+        $serverDir = Join-Path -Path $releaseDir -ChildPath 'server'
+        $libraryDir = Join-Path -Path $releaseDir -ChildPath 'library'
         
-    #     # cоздание директорий
-    #     New-Item -ItemType Directory -Force -Path $clientDir
-    #     New-Item -ItemType Directory -Force -Path $libraryDir
+        # cоздание директорий
+        New-Item -ItemType Directory -Force -Path $serverDir
+        New-Item -ItemType Directory -Force -Path $libraryDir
         
-    #     # Копирование файлов и директорий
-    #     Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'Release\*') -Destination $clientDir
+        # Копирование файлов и директорий
+        Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'Release\*') -Destination $serverDir
 
-    #     Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'async\include') -Destination $libraryDir
-    #     Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'async\lib') -Destination $libraryDir
-    #     Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'async\bin') -Destination $libraryDir
+        Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'async\include') -Destination $libraryDir
+        Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'async\lib') -Destination $libraryDir
+        Copy-Item -Recurse -Force -Path (Join-Path -Path $buildOutputDir -ChildPath 'async\bin') -Destination $libraryDir
 
-    # - name: Archive files (Windows)
-    #   if: matrix.os == 'windows-latest'
-    #   shell: pwsh
-    #   run: |
-    #     $buildOutputDir = "${{ steps.strings.outputs.build-output-dir }}"
-    #     $releaseDir = Join-Path -Path $buildOutputDir -ChildPath 'release_out'
-    #     $archivePath = Join-Path -Path $buildOutputDir -ChildPath 'async.zip'
+    - name: Archive files (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        $buildOutputDir = "${{ steps.strings.outputs.build-output-dir }}\server"
+        $releaseDir = Join-Path -Path $buildOutputDir -ChildPath 'release_out'
+        $archivePath = Join-Path -Path $buildOutputDir -ChildPath 'async.zip'
         
-    #     Compress-Archive -Path $releaseDir\client, $releaseDir\library -DestinationPath $archivePath -Force
+        Compress-Archive -Path $releaseDir\server, $releaseDir\library -DestinationPath $archivePath -Force
 
       
-    # - name: Prepare directories for archiving (Ubuntu & macOS)
-    #   if: matrix.os != 'windows-latest'
-    #   run: |
-    #     mkdir -p ${{ steps.strings.outputs.build-output-dir }}/release_out/client
-    #     mkdir -p ${{ steps.strings.outputs.build-output-dir }}/release_out/library
-    #     cp -r ${{ steps.strings.outputs.build-output-dir }}/async_cli ${{ steps.strings.outputs.build-output-dir }}/release_out/client/
-    #     find "${{ steps.strings.outputs.build-output-dir }}" -name 'lib*' -exec cp {} "${{ steps.strings.outputs.build-output-dir }}/release_out/client/" \;
+    - name: Prepare directories for archiving (Ubuntu & macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        mkdir -p ${{ steps.strings.outputs.build-output-dir }}/release_out/server
+        mkdir -p ${{ steps.strings.outputs.build-output-dir }}/release_out/library
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/server/bulk_server ${{ steps.strings.outputs.build-output-dir }}/release_out/server/
+        find "${{ steps.strings.outputs.build-output-dir }}/server" -name 'lib*' -exec cp {} "${{ steps.strings.outputs.build-output-dir }}/release_out/server/" \;
 
-    #     cp -r ${{ steps.strings.outputs.build-output-dir }}/async/include ${{ steps.strings.outputs.build-output-dir }}/release_out/library/
-    #     cp -r ${{ steps.strings.outputs.build-output-dir }}/async/lib ${{ steps.strings.outputs.build-output-dir }}/release_out/library/
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/server/async/include ${{ steps.strings.outputs.build-output-dir }}/release_out/library/
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/server/async/lib ${{ steps.strings.outputs.build-output-dir }}/release_out/library/
         
-    # - name: Archive client files (Ubuntu & macOS)
-    #   if: matrix.os != 'windows-latest'
-    #   run: |
-    #     cd ${{ steps.strings.outputs.build-output-dir }}/release_out
-    #     tar -czf async.tar.gz client library
+    - name: Archive server files (Ubuntu & macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        cd ${{ steps.strings.outputs.build-output-dir }}/release_out
+        tar -czf bulk_server.tar.gz server library
 
 
-    # - name: Upload Release Asset (Ubuntu & macOS)
-    #   if: ${{ success() && matrix.os != 'windows-latest' }}    
-    #   id: upload-release-asset-client
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     upload_url: ${{ needs.create_release.outputs.upload_url }}
-    #     asset_path: ${{ steps.strings.outputs.build-output-dir }}/release_out/async.tar.gz
-    #     asset_name: async-${{ matrix.os }}-0.0.${{ github.run_number }}.tar.gz
-    #     asset_content_type: application/gzip
+    - name: Upload Release Asset (Ubuntu & macOS)
+      if: ${{ success() && matrix.os != 'windows-latest' }}    
+      id: upload-release-asset-server
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.strings.outputs.build-output-dir }}/release_out/bulk_server.tar.gz
+        asset_name: bulk_server-${{ matrix.os }}-0.0.${{ github.run_number }}.tar.gz
+        asset_content_type: application/gzip
 
-    # - name: Upload Release Asset (Windows)
-    #   if: ${{ success() && matrix.os == 'windows-latest' }}
-    #   id: upload-release-asset-windows
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     upload_url: ${{ needs.create_release.outputs.upload_url }}
-    #     asset_path: ${{ steps.strings.outputs.build-output-dir }}\async.zip
-    #     asset_name: async-${{ matrix.os }}-0.0.${{ github.run_number }}.zip
-    #     asset_content_type: application/zip
+    - name: Upload Release Asset (Windows)
+      if: ${{ success() && matrix.os == 'windows-latest' }}
+      id: upload-release-asset-windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.strings.outputs.build-output-dir }}\server\bulk_server.zip
+        asset_name: bulk_server-${{ matrix.os }}-0.0.${{ github.run_number }}.zip
+        asset_content_type: application/zip
