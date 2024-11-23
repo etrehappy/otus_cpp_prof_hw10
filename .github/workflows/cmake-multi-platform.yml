@@ -195,7 +195,7 @@ jobs:
       run: |
         $buildOutputDir = "${{ steps.strings.outputs.build-output-dir }}\server"
         $releaseDir = Join-Path -Path $buildOutputDir -ChildPath 'release_out'
-        $archivePath = Join-Path -Path $buildOutputDir -ChildPath 'async.zip'
+        $archivePath = Join-Path -Path $buildOutputDir -ChildPath 'bulk_server.zip'
         
         Compress-Archive -Path $releaseDir\server, $releaseDir\library -DestinationPath $archivePath -Force
 
